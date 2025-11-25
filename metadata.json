@@ -1,0 +1,5 @@
+{
+  "name": "MedHub Hours Helper",
+  "description": "A fast, resident-friendly tool for logging duty hours, managing weekly templates, and preparing data for MedHub.",
+  "requestFramePermissions": []
+}
