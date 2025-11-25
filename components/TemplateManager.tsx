@@ -3,7 +3,7 @@ import { WeeklyTemplate, WeekSchedule } from '../types';
 import { StorageService } from '../services/storage';
 import { CURRENT_USER_ID } from '../data/seeds';
 import { generateId, formatDateISO } from '../utils';
-import { IconSave, IconFileText, IconX } from './Icons';
+import { IconSave, IconFileText, IconX, IconTrash } from './Icons';
 
 interface TemplateManagerProps {
   currentSchedule: WeekSchedule;
@@ -36,6 +36,13 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({ currentSchedul
     StorageService.saveTemplate(template);
     setTemplates(StorageService.getTemplates(CURRENT_USER_ID));
     setMode('list');
+  };
+
+  const handleDelete = (template: WeeklyTemplate) => {
+    if (confirm(`Delete "${template.name}"? This cannot be undone.`)) {
+      StorageService.deleteTemplate(template.id);
+      setTemplates(StorageService.getTemplates(CURRENT_USER_ID));
+    }
   };
 
   const handleApply = (template: WeeklyTemplate) => {
@@ -114,12 +121,21 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({ currentSchedul
                                                 Created: {new Date(t.createdAt).toLocaleDateString()}
                                             </div>
                                         </div>
-                                        <button 
-                                            onClick={() => handleApply(t)}
-                                            className="bg-blue-50 text-blue-700 px-3 py-1 rounded-md text-sm font-medium hover:bg-blue-100"
-                                        >
-                                            Apply
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handleDelete(t)}
+                                                className="text-slate-400 hover:text-red-600 p-1 rounded transition-colors"
+                                                title="Delete template"
+                                            >
+                                                <IconTrash className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleApply(t)}
+                                                className="bg-blue-50 text-blue-700 px-3 py-1 rounded-md text-sm font-medium hover:bg-blue-100"
+                                            >
+                                                Apply
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

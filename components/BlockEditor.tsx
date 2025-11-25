@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TimeBlock, TimeBlockType, WorkSetting } from '../types';
 import { SettingsSelect } from './SettingsSelect';
-import { generateId, toTimeInputStr, combineDateAndTime } from '../utils';
+import { generateId, toTimeInputStr, combineDateAndTime, parseTimeInput, formatTimeDisplay } from '../utils';
 import { IconClock, IconX } from './Icons';
 
 interface BlockEditorProps {
@@ -21,14 +21,22 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
 }) => {
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('17:00');
+  const [startTimeRaw, setStartTimeRaw] = useState('8a');
+  const [endTimeRaw, setEndTimeRaw] = useState('5p');
+  const [startTimeError, setStartTimeError] = useState('');
+  const [endTimeError, setEndTimeError] = useState('');
   const [settingId, setSettingId] = useState<string>('');
   const [type, setType] = useState<TimeBlockType>('standard');
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (initialBlock) {
-      setStartTime(toTimeInputStr(new Date(initialBlock.start)));
-      setEndTime(toTimeInputStr(new Date(initialBlock.end)));
+      const start = toTimeInputStr(new Date(initialBlock.start));
+      const end = toTimeInputStr(new Date(initialBlock.end));
+      setStartTime(start);
+      setEndTime(end);
+      setStartTimeRaw(formatTimeDisplay(start));
+      setEndTimeRaw(formatTimeDisplay(end));
       setSettingId(initialBlock.workSettingId);
       setType(initialBlock.type);
     }
@@ -37,14 +45,45 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
   const handleQuickTime = (start: string, end: string) => {
     setStartTime(start);
     setEndTime(end);
+    setStartTimeRaw(formatTimeDisplay(start));
+    setEndTimeRaw(formatTimeDisplay(end));
+    setStartTimeError('');
+    setEndTimeError('');
+  };
+
+  const handleStartTimeBlur = () => {
+    const parsed = parseTimeInput(startTimeRaw);
+    if (parsed) {
+      setStartTime(parsed);
+      setStartTimeRaw(formatTimeDisplay(parsed));
+      setStartTimeError('');
+    } else {
+      setStartTimeError('Invalid time format');
+    }
+  };
+
+  const handleEndTimeBlur = () => {
+    const parsed = parseTimeInput(endTimeRaw);
+    if (parsed) {
+      setEndTime(parsed);
+      setEndTimeRaw(formatTimeDisplay(parsed));
+      setEndTimeError('');
+    } else {
+      setEndTimeError('Invalid time format');
+    }
   };
 
   const handleSave = () => {
+    // Validate times first
+    if (startTimeError || endTimeError) {
+      setError('Please fix time format errors');
+      return;
+    }
     if (!settingId) {
       setError('Please select a clinical setting');
       return;
     }
-    
+
     // Create ISO strings
     const startIso = combineDateAndTime(dateStr, startTime);
     let endIso = combineDateAndTime(dateStr, endTime);
@@ -104,25 +143,43 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">Start</label>
               <div className="relative">
                 <IconClock className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                <input 
-                  type="time" 
-                  value={startTime} 
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                <input
+                  type="text"
+                  value={startTimeRaw}
+                  onChange={(e) => setStartTimeRaw(e.target.value)}
+                  onBlur={handleStartTimeBlur}
+                  placeholder="e.g. 7a, 8:30a"
+                  className={`w-full pl-9 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                    startTimeError ? 'border-red-400 bg-red-50' : 'border-slate-300'
+                  }`}
                 />
               </div>
+              {startTimeError ? (
+                <p className="text-xs text-red-500 mt-1">{startTimeError}</p>
+              ) : (
+                <p className="text-xs text-slate-400 mt-1">→ {formatTimeDisplay(startTime)}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">End</label>
               <div className="relative">
                 <IconClock className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                <input 
-                  type="time" 
-                  value={endTime} 
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                <input
+                  type="text"
+                  value={endTimeRaw}
+                  onChange={(e) => setEndTimeRaw(e.target.value)}
+                  onBlur={handleEndTimeBlur}
+                  placeholder="e.g. 5p, 5:30p"
+                  className={`w-full pl-9 pr-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                    endTimeError ? 'border-red-400 bg-red-50' : 'border-slate-300'
+                  }`}
                 />
               </div>
+              {endTimeError ? (
+                <p className="text-xs text-red-500 mt-1">{endTimeError}</p>
+              ) : (
+                <p className="text-xs text-slate-400 mt-1">→ {formatTimeDisplay(endTime)}</p>
+              )}
             </div>
           </div>
 

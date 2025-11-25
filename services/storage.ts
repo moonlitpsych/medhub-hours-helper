@@ -8,10 +8,9 @@ const KEYS = {
     SCHEDULES: 'medhub_schedules',
 };
 
-// Initialize
-if (!localStorage.getItem(KEYS.SETTINGS)) {
-    localStorage.setItem(KEYS.SETTINGS, JSON.stringify(SEED_SETTINGS));
-}
+// Initialize settings - always use fresh seed data for now
+// (In production, you'd want a version check or merge strategy)
+localStorage.setItem(KEYS.SETTINGS, JSON.stringify(SEED_SETTINGS));
 
 export const StorageService = {
     getSettings: (): WorkSetting[] => {
